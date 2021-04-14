@@ -109,8 +109,15 @@ RUN cd /workspace && \
     cmake .. -DTRT_LIB_DIR=/usr/lib/x86_64-linux-gnu -DTRT_OUT_DIR=`pwd`/out && \
     make -j$(nproc)
 
-# Remove SSH keys
-RUN rm -rf /home/trtuser/.ssh/
+# Convert model from atomic operators to Hardshrink
+COPY convert_hardshrink.py /workspace/TensorRT
+RUN cd /workspace/TensorRT && \
+    mkdir /wokrspace/TensorRT/data && \
+    python3 convert_hardshrink.py -m /home/trtuser/examples/mnist/mnist_cnn.onnx -s data/mnist_with_hardshrink.onnx
+
+# Download MNIST samples data
+RUN cd /wokrspace/TensorRT/samples/python/scripts && \
+    python3 download_mnist_pgms.py -o /wokrspace/TensorRT/data
 
 # Set environment and working directory
 ENV TRT_LIBPATH /usr/lib/x86_64-linux-gnu
